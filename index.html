@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>هوش</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#3a3a4a; --bg:#ffffff;
+  --pink:#ffc8dd; --blue:#bde0fe; --mint:#b9fbc0; --yellow:#fdffb6; --lav:#cdb4db;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:'Vazirmatn',system-ui,sans-serif; font-size:15px;
+  display:flex; flex-direction:column; max-width:760px; margin:0 auto;
+}
+.px{font-family:'Press Start 2P',monospace; font-size:11px; letter-spacing:0}
+header{
+  display:flex; align-items:center; gap:6px; padding:8px;
+  border-bottom:4px solid var(--ink); background:var(--bg);
+}
+header h1{margin:0; font-size:16px; flex:1; display:flex; align-items:center; gap:8px}
+.logo{width:28px;height:28px;image-rendering:pixelated}
+.btn{
+  font-family:inherit; font-size:13px; color:var(--ink); cursor:pointer;
+  border:3px solid var(--ink); padding:7px 10px; background:var(--blue);
+  box-shadow:4px 4px 0 var(--ink);
+  clip-path:polygon(0 4px,4px 4px,4px 0,calc(100% - 4px) 0,calc(100% - 4px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 4px) calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 4px),0 calc(100% - 4px));
+  position:relative; top:0; left:0;
+}
+.btn:active{top:3px;left:-3px;box-shadow:1px 1px 0 var(--ink)}
+.btn.pink{background:var(--pink)} .btn.mint{background:var(--mint)}
+.btn.yellow{background:var(--yellow)} .btn.lav{background:var(--lav)}
+.btn:disabled{opacity:.5;cursor:default}
+#modelBtn{max-width:30vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr}
+
+#chat{flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:12px}
+.msg{
+  max-width:92%; padding:10px 12px; border:3px solid var(--ink);
+  word-break:break-word; line-height:1.9; box-shadow:4px 4px 0 var(--ink);
+}
+.msg.user{align-self:flex-start; background:var(--mint); white-space:pre-wrap}
+.msg.bot{align-self:flex-end; background:var(--yellow)}
+.msg.err{align-self:center; background:var(--pink); white-space:pre-wrap}
+.msg.bot .md > :first-child{margin-top:0}
+.msg.bot .md > :last-child{margin-bottom:0}
+.md p{margin:6px 0}
+.md h1,.md h2,.md h3{margin:10px 0 4px; line-height:1.5}
+.md h1{font-size:18px} .md h2{font-size:16px} .md h3{font-size:15px}
+.md ul,.md ol{margin:6px 0; padding-inline-start:22px}
+.md code{font-family:monospace;font-size:13px;direction:ltr;unicode-bidi:embed;background:#fff;border:2px solid var(--ink);padding:0 4px}
+.md a{color:#1d4ed8;word-break:break-all}
+.code{margin:8px 0;border:3px solid var(--ink);background:#fff;direction:ltr;text-align:left}
+.chead{display:flex;justify-content:space-between;align-items:center;background:var(--lav);border-bottom:3px solid var(--ink);padding:3px 6px;font-family:monospace;font-size:12px}
+.copybtn{font-family:inherit;font-size:12px;border:2px solid var(--ink);background:var(--mint);color:var(--ink);cursor:pointer;padding:1px 8px}
+.code pre{margin:0;padding:8px;overflow-x:auto;font-family:monospace;font-size:13px;line-height:1.6;white-space:pre}
+.code pre code{border:0;padding:0;background:none;font-size:13px}
+details.tool{margin:8px 0;border:2px dashed var(--ink);background:#fff;padding:4px 8px;direction:rtl}
+details.tool summary{cursor:pointer;font-size:13px}
+details.tool pre{direction:ltr;text-align:left;font-family:monospace;font-size:12px;white-space:pre-wrap;word-break:break-all;margin:6px 0;padding:6px;background:#f6f6f6;border:1px solid var(--ink)}
+.empty{margin:auto;text-align:center;line-height:2.4}
+form{display:flex; gap:8px; padding:10px; border-top:4px solid var(--ink); align-items:flex-end}
+textarea{
+  flex:1; resize:none; font-family:inherit; font-size:15px; color:var(--ink);
+  border:3px solid var(--ink); padding:8px; background:#fff; max-height:140px; outline:none;
+}
+textarea:focus{background:#fffef0}
+.overlay{position:fixed;inset:0;background:rgba(58,58,74,.45);display:none;align-items:center;justify-content:center;padding:14px;z-index:10}
+.overlay.on{display:flex}
+.card{background:#fff;border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);width:100%;max-width:520px;max-height:85vh;display:flex;flex-direction:column;padding:12px;gap:10px}
+.card h2{margin:0;font-size:15px}
+.card input{font-family:inherit;font-size:14px;border:3px solid var(--ink);padding:8px;outline:none;direction:ltr;width:100%}
+#modelList,#convList{overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+#modelList{direction:ltr}
+.mitem{
+  text-align:left;font-family:monospace;font-size:12px;padding:8px;cursor:pointer;
+  border:3px solid var(--ink);background:#fff;word-break:break-all;color:var(--ink)
+}
+.mitem:hover{background:var(--blue)}
+.mitem.sel{background:var(--pink)}
+.citem{display:flex;gap:6px;align-items:stretch}
+.citem .ct{flex:1;text-align:right;font-family:inherit;font-size:13px;padding:8px;cursor:pointer;border:3px solid var(--ink);background:#fff;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.citem .ct.sel{background:var(--pink)}
+.citem .cd{font-family:inherit;border:3px solid var(--ink);background:var(--pink);color:var(--ink);cursor:pointer;padding:0 10px}
+.row{display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap}
+.note{font-size:12px;opacity:.8;line-height:1.8}
+#jsErr{display:none;position:fixed;top:0;left:0;right:0;z-index:99;background:#ffc8dd;border-bottom:4px solid #3a3a4a;padding:8px;font-family:monospace;font-size:12px;direction:ltr;text-align:left;white-space:pre-wrap;word-break:break-all}
+</style>
+</head>
+<body>
+<div id="jsErr"></div>
+
+<header>
+  <h1>
+    <svg class="logo" viewBox="0 0 8 8" shape-rendering="crispEdges">
+      <rect width="8" height="8" fill="#ffffff"/>
+      <rect x="1" y="1" width="6" height="5" fill="#cdb4db"/>
+      <rect x="2" y="2" width="1" height="1" fill="#3a3a4a"/>
+      <rect x="5" y="2" width="1" height="1" fill="#3a3a4a"/>
+      <rect x="2" y="4" width="4" height="1" fill="#ffc8dd"/>
+      <rect x="3" y="0" width="2" height="1" fill="#3a3a4a"/>
+      <rect x="1" y="6" width="6" height="1" fill="#3a3a4a"/>
+    </svg>
+    هوش
+  </h1>
+  <button class="btn mint" id="convBtn" type="button">☰ گفتگوها</button>
+  <button class="btn lav px" id="modelBtn" type="button">MODEL</button>
+  <button class="btn yellow" id="setBtn" type="button">⚙</button>
+</header>
+
+<div id="chat"></div>
+
+<form id="form">
+  <textarea id="input" rows="1" placeholder="پیامت را بنویس..."></textarea>
+  <button class="btn pink" id="sendBtn" type="submit">ارسال</button>
+</form>
+
+<!-- فهرست گفتگوها -->
+<div class="overlay" id="convOv">
+  <div class="card">
+    <h2>گفتگوها</h2>
+    <div id="convList"></div>
+    <div class="row">
+      <button class="btn mint" id="convNew" type="button">+ گفتگوی تازه</button>
+      <button class="btn" id="convClose" type="button">بستن</button>
+    </div>
+  </div>
+</div>
+
+<!-- انتخاب مدل -->
+<div class="overlay" id="modelOv">
+  <div class="card">
+    <h2>انتخاب مدل هوش مصنوعی</h2>
+    <input id="modelSearch" placeholder="search..." autocomplete="off">
+    <div id="modelList"></div>
+    <div class="row">
+      <button class="btn mint" id="modelRefresh" type="button">بارگذاری دوباره</button>
+      <button class="btn" id="modelClose" type="button">بستن</button>
+    </div>
+  </div>
+</div>
+
+<!-- تنظیمات -->
+<div class="overlay" id="setOv">
+  <div class="card">
+    <h2>تنظیمات</h2>
+    <div class="note">رمز سایت (همان HOST_API_KEY که در Render گذاشتی). فقط روی همین گوشی ذخیره می‌شود.</div>
+    <input id="keyInput" type="password" placeholder="password" autocomplete="off">
+    <div class="row">
+      <button class="btn mint" id="keySave" type="button">ذخیره</button>
+      <button class="btn pink" id="clearChat" type="button">پاک‌کردن این گفتگو</button>
+      <button class="btn" id="setClose" type="button">بستن</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* نمایش هر خطای جاوااسکریپت بالای صفحه، برای عیب‌یابی روی گوشی */
+window.addEventListener('error', function(e){
+  var b = document.getElementById('jsErr');
+  if (!b) return;
+  b.style.display = 'block';
+  b.textContent += 'JS error: ' + (e.message || '?') + ' (line ' + (e.lineno || '?') + ')\n';
+});
+window.addEventListener('unhandledrejection', function(e){
+  var b = document.getElementById('jsErr');
+  if (!b) return;
+  b.style.display = 'block';
+  b.textContent += 'Promise error: ' + (e.reason && e.reason.message ? e.reason.message : e.reason) + '\n';
+});
+</script>
+
+<script>
+const $ = id => document.getElementById(id);
+const chat = $('chat'), input = $('input'), sendBtn = $('sendBtn');
+const FENCE = '\x60\x60\x60'; /* سه بک‌تیک، بدون نوشتن مستقیم */
+
+/* ---------- ذخیره‌سازی ---------- */
+const getKey = () => localStorage.getItem('hoosh_key') || '';
+const getModel = () => localStorage.getItem('hoosh_model') || 'openrouter/free';
+function showModel(){ $('modelBtn').textContent = getModel(); }
+showModel();
+
+let convs = [];
+try { convs = JSON.parse(localStorage.getItem('hoosh_convs') || '[]'); } catch(e){ convs = []; }
+if (!Array.isArray(convs)) convs = [];
+let cur = null;
+let busy = false, abortCtl = null, allModels = [];
+
+function saveConvs(){
+  try { localStorage.setItem('hoosh_convs', JSON.stringify(convs)); } catch(e){}
+}
+function newConv(){
+  cur = {id: Date.now().toString(36), title: 'گفتگوی جدید', messages: [], ts: Date.now()};
+}
+function commit(){
+  if (!convs.includes(cur)) convs.unshift(cur);
+  cur.ts = Date.now();
+  convs.sort((a, b) => b.ts - a.ts);
+  convs = convs.slice(0, 50);
+  saveConvs();
+  try { localStorage.setItem('hoosh_cur', cur.id); } catch(e){}
+}
+
+/* ---------- مارک‌داون (امن: اول escape، بعد تگ) ---------- */
+function esc(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function inline(s){
+  s = esc(s);
+  const codes = [];
+  s = s.replace(/\x60([^\x60\n]+)\x60/g, (m, c) => { codes.push(c); return '\u0000' + (codes.length - 1) + '\u0000'; });
+  s = s.replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>');
+  s = s.replace(/(^|[^*])\*([^*\s][^*\n]*)\*/g, '$1<i>$2</i>');
+  s = s.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  s = s.replace(/\u0000(\d+)\u0000/g, (m, i) => '<code>' + codes[i] + '</code>');
+  return s;
+}
+function codeBlock(lang, body){
+  return '<div class="code"><div class="chead"><span>' + esc(lang || 'code') +
+    '</span><button type="button" class="copybtn">کپی</button></div><pre><code>' + esc(body) + '</code></pre></div>';
+}
+function renderMd(src){
+  const lines = src.split('\n');
+  let out = '', para = [], list = null, inCode = false, lang = '', buf = [];
+  const flushPara = () => { if (para.length){ out += '<p>' + para.map(inline).join('<br>') + '</p>'; para = []; } };
+  const flushList = () => { if (list){ out += '<' + list.t + '>' + list.items.map(x => '<li>' + inline(x) + '</li>').join('') + '</' + list.t + '>'; list = null; } };
+  for (const line of lines){
+    const tl = line.trim();
+    if (inCode){
+      if (tl.startsWith(FENCE)){ out += codeBlock(lang, buf.join('\n')); inCode = false; buf = []; }
+      else buf.push(line);
+      continue;
+    }
+    if (tl.startsWith(FENCE)){
+      flushPara(); flushList();
+      inCode = true;
+      const lm = tl.slice(3).trim().match(/^[\w+#.-]*/);
+      lang = lm ? lm[0] : '';
+      buf = [];
+      continue;
+    }
+    const h = line.match(/^(#{1,3})\s+(.*)$/);
+    const ul = line.match(/^\s*[-*•]\s+(.*)$/);
+    const ol = line.match(/^\s*\d+[.)]\s+(.*)$/);
+    if (h){ flushPara(); flushList(); const n = h[1].length; out += '<h' + n + '>' + inline(h[2]) + '</h' + n + '>'; }
+    else if (ul){ flushPara(); if (!list || list.t !== 'ul'){ flushList(); list = {t:'ul', items:[]}; } list.items.push(ul[1]); }
+    else if (ol){ flushPara(); if (!list || list.t !== 'ol'){ flushList(); list = {t:'ol', items:[]}; } list.items.push(ol[1]); }
+    else if (!tl){ flushPara(); flushList(); }
+    else { flushList(); para.push(line); }
+  }
+  if (inCode) out += codeBlock(lang, buf.join('\n')); /* بلوک نیمه‌کاره هنگام استریم */
+  flushPara(); flushList();
+  return out;
+}
+
+/* ---------- نمایش پیام‌ها ---------- */
+function nearBottom(){ return chat.scrollHeight - chat.scrollTop - chat.clientHeight < 120; }
+function scrollDown(){ chat.scrollTop = chat.scrollHeight; }
+function clearEmpty(){ const e = $('empty'); if (e) e.remove(); }
+function showEmpty(t){
+  chat.innerHTML = '<div class="empty" id="empty"><div class="px" style="line-height:2">HELLO!</div><div>' + t + '</div></div>';
+}
+function addMsg(text, cls){
+  clearEmpty();
+  const d = document.createElement('div');
+  d.className = 'msg ' + cls;
+  d.textContent = text;
+  chat.appendChild(d);
+  scrollDown();
+  return d;
+}
+/* segs: [{t:'text', v}, {t:'tool', code, output, open}] */
+function paintBot(el, segs){
+  el.innerHTML = '';
+  if (!segs.length){ el.textContent = '...'; return; }
+  for (const s of segs){
+    if (s.t === 'text'){
+      const d = document.createElement('div');
+      d.className = 'md';
+      d.innerHTML = renderMd(s.v);
+      el.appendChild(d);
+    } else {
+      const dt = document.createElement('details');
+      dt.className = 'tool';
+      if (s.open) dt.open = true;
+      dt.addEventListener('toggle', () => { s.open = dt.open; });
+      const sm = document.createElement('summary');
+      sm.textContent = s.output === null ? '⏳ در حال اجرای کد...' : '🛠 کد اجرا شد (برای دیدن بزن)';
+      dt.appendChild(sm);
+      const p1 = document.createElement('pre'); p1.textContent = s.code || '';
+      dt.appendChild(p1);
+      if (s.output !== null){
+        const p2 = document.createElement('pre'); p2.textContent = s.output;
+        dt.appendChild(p2);
+      }
+      el.appendChild(dt);
+    }
+  }
+}
+function renderChat(){
+  chat.innerHTML = '';
+  if (!cur.messages.length){ showEmpty('سلام! یک پیام بنویس تا شروع کنیم.'); return; }
+  for (const m of cur.messages){
+    if (m.role === 'user') addMsg(m.content, 'user');
+    else {
+      const el = addMsg('', 'bot');
+      paintBot(el, m.segs || [{t:'text', v: m.content}]);
+    }
+  }
+  scrollDown();
+}
+
+/* دکمهٔ کپی بلوک کد */
+chat.addEventListener('click', e => {
+  const b = e.target.closest('.copybtn');
+  if (!b) return;
+  const txt = b.closest('.code').querySelector('code').textContent;
+  const done = () => { b.textContent = 'کپی شد ✓'; setTimeout(() => { b.textContent = 'کپی'; }, 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt, done));
+  } else fallbackCopy(txt, done);
+});
+function fallbackCopy(txt, done){
+  const t = document.createElement('textarea');
+  t.value = txt; t.style.position = 'fixed'; t.style.opacity = '0';
+  document.body.appendChild(t); t.select();
+  try { document.execCommand('copy'); done(); } catch(e){}
+  t.remove();
+}
+
+/* ---------- ارسال با استریم ---------- */
+function payloadMsgs(){
+  let arr = cur.messages.map(m => ({role: m.role, content: String(m.content || '(اجرای کد)').slice(0, 20000)})).slice(-40);
+  let tot = arr.reduce((a, m) => a + m.content.length, 0);
+  while (arr.length > 1 && tot > 110000){ tot -= arr[0].content.length; arr.shift(); }
+  return arr;
+}
+function segsToText(segs){ return segs.filter(s => s.t === 'text').map(s => s.v).join(''); }
+
+async function send(){
+  const text = input.value.trim();
+  if (!text) return;
+  if (!getKey()){ openSettings(); addMsg('اول رمز سایت را در تنظیمات وارد کن.', 'err'); return; }
+
+  input.value = ''; input.style.height = 'auto';
+  cur.messages.push({role:'user', content:text});
+  if (cur.messages.length === 1) cur.title = text.slice(0, 40);
+  addMsg(text, 'user');
+
+  busy = true; sendBtn.textContent = 'توقف';
+  const el = addMsg('...', 'bot');
+  const segs = [];
+  let errMsg = '', badKey = false, httpErr = '';
+  let pending = false;
+  const repaint = () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => {
+      pending = false;
+      const stick = nearBottom();
+      paintBot(el, segs);
+      if (stick) scrollDown();
+    });
+  };
+
+  abortCtl = new AbortController();
+  try{
+    const r = await fetch('/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'x-api-key': getKey()},
+      body: JSON.stringify({messages: payloadMsgs(), model: getModel(), stream: true}),
+      signal: abortCtl.signal
+    });
+    if (!r.ok){
+      let d = null; try { d = await r.json(); } catch(e){}
+      const det = d && (d.detail || d.error);
+      if (r.status === 401 || r.status === 403){ badKey = true; }
+      else httpErr = 'خطا ' + r.status + (det ? ': ' + (typeof det === 'string' ? det : JSON.stringify(det)) : '');
+    } else {
+      const reader = r.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      const handle = ev => {
+        if (ev.type === 'delta'){
+          const last = segs[segs.length - 1];
+          if (last && last.t === 'text') last.v += ev.text;
+          else segs.push({t:'text', v: ev.text});
+        } else if (ev.type === 'tool_start'){
+          segs.push({t:'tool', code: ev.code || '', output: null, open: false});
+        } else if (ev.type === 'tool_result'){
+          for (let i = segs.length - 1; i >= 0; i--){
+            if (segs[i].t === 'tool' && segs[i].output === null){ segs[i].output = ev.output || ''; break; }
+          }
+        } else if (ev.type === 'error'){
+          errMsg = ev.message || 'خطا';
+        }
+        repaint();
+      };
+      while (true){
+        const {done, value} = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, {stream:true});
+        let i;
+        while ((i = buf.indexOf('\n\n')) >= 0){
+          const part = buf.slice(0, i); buf = buf.slice(i + 2);
+          for (const l of part.split('\n')){
+            if (l.startsWith('data:')){
+              try { handle(JSON.parse(l.slice(5).trim())); } catch(e){}
+            }
+          }
+        }
+      }
+    }
+  }catch(e){
+    if (e.name !== 'AbortError') errMsg = errMsg || 'اتصال برقرار نشد. اگر سایت خواب بوده، یک دقیقه صبر کن و دوباره بفرست.';
+  }
+
+  abortCtl = null; busy = false; sendBtn.textContent = 'ارسال';
+  paintBot(el, segs);
+  const hasContent = segs.some(s => s.t === 'text' ? s.v.trim() : true);
+  if (badKey){
+    localStorage.removeItem('hoosh_key');
+    cur.messages.pop(); el.remove();
+    addMsg('رمز اشتباه است. دوباره در تنظیمات وارد کن.', 'err');
+  } else if (httpErr){
+    cur.messages.pop(); el.remove();
+    addMsg(httpErr, 'err');
+  } else if (!hasContent){
+    cur.messages.pop(); el.remove();
+    if (errMsg) addMsg(errMsg, 'err');
+    commit();
+  } else {
+    segs.forEach(s => { if (s.t === 'tool' && s.output === null) s.output = '(نیمه‌کاره ماند)'; });
+    cur.messages.push({role:'assistant', content: segsToText(segs), segs: segs});
+    commit();
+    if (errMsg) addMsg(errMsg, 'err');
+  }
+  input.focus();
+}
+
+$('form').addEventListener('submit', e => {
+  e.preventDefault();
+  if (busy){ if (abortCtl) abortCtl.abort(); return; }
+  send();
+});
+input.addEventListener('input', () => {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+});
+
+/* ---------- فهرست گفتگوها ---------- */
+function renderConvs(){
+  const box = $('convList'); box.innerHTML = '';
+  if (!convs.length){ box.innerHTML = '<div class="note">هنوز گفتگویی ذخیره نشده.</div>'; return; }
+  convs.forEach(c => {
+    const row = document.createElement('div'); row.className = 'citem';
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'ct' + (c === cur ? ' sel' : ''); b.textContent = c.title || 'بدون عنوان';
+    b.onclick = () => {
+      if (busy) return;
+      cur = c; try { localStorage.setItem('hoosh_cur', c.id); } catch(e){}
+      renderChat(); closeOv('convOv');
+    };
+    const d = document.createElement('button');
+    d.type = 'button'; d.className =  'cd'; d.textContent = '✕';
+    d.onclick = () => {
+      if (busy) return;
+      convs = convs.filter(x => x !== c); saveConvs();
+      if (c === cur){ newConv(); renderChat(); }
+      renderConvs();
+    };
+    row.appendChild(b); row.appendChild(d); box.appendChild(row);
+  });
+}
+$('convBtn').onclick = () => { renderConvs(); $('convOv').classList.add('on'); };
+$('convClose').onclick = () => closeOv('convOv');
+$('convNew').onclick = () => {
+  if (busy) return;
+  newConv(); renderChat(); closeOv('convOv');
+};
+
+/* ---------- مدل‌ها ---------- */
+function renderModels(){
+  const q = $('modelSearch').value.trim().toLowerCase();
+  const box = $('modelList'); box.innerHTML = '';
+  const curM = getModel();
+  const list = allModels.filter(m => m.toLowerCase().includes(q));
+  if (!list.length){ box.innerHTML = '<div class="note">موردی پیدا نشد.</div>'; return; }
+  list.forEach(m => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mitem' + (m === curM ? ' sel' : '');
+    b.textContent = m;
+    b.onclick = () => { localStorage.setItem('hoosh_model', m); showModel(); closeOv('modelOv'); };
+    box.appendChild(b);
+  });
+}
+async function loadModels(){
+  $('modelList').innerHTML = '<div class="note">در حال بارگذاری...</div>';
+  try{
+    const r = await fetch('/models', {headers:{'x-api-key':getKey()}});
+    const d = await r.json();
+    const arr = Array.isArray(d) ? d : (d.models || d.data || []);
+    allModels = arr.map(x => typeof x === 'string' ? x : (x.id || x.name)).filter(Boolean);
+    if (!allModels.includes('openrouter/free')) allModels.unshift('openrouter/free');
+  }catch(e){
+    allModels = ['openrouter/free'];
+  }
+  renderModels();
+}
+$('modelBtn').onclick = () => { $('modelOv').classList.add('on'); loadModels(); };
+$('modelRefresh').onclick = loadModels;
+$('modelSearch').addEventListener('input', renderModels);
+$('modelClose').onclick = () => closeOv('modelOv');
+
+/* ---------- تنظیمات ---------- */
+function openSettings(){ $('keyInput').value = ''; $('setOv').classList.add('on'); }
+function closeOv(id){ $(id).classList.remove('on'); }
+$('setBtn').onclick = openSettings;
+$('setClose').onclick = () => closeOv('setOv');
+$('keySave').onclick = () => {
+  const v = $('keyInput').value.trim();
+  if (v) localStorage.setItem('hoosh_key', v);
+  closeOv('setOv');
+};
+$('clearChat').onclick = () => {
+  if (busy) return;
+  convs = convs.filter(x => x !== cur); saveConvs();
+  newConv(); renderChat(); closeOv('setOv');
+};
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('on'); }));
+
+/* ---------- شروع ---------- */
+(function init(){
+  const id = localStorage.getItem('hoosh_cur');
+  cur = convs.find(c => c.id === id) || null;
+  if (!cur) newConv();
+  renderChat();
+})();
+</script>
+</body>
+</html>
